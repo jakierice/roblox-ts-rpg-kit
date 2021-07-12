@@ -1,0 +1,33 @@
+{
+  "name": "roblox-ts-rpg-kit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "concurrently \"rbxtsc -w\" \"rojo serve\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@rbxts/compiler-types": "^1.1.1-types.5",
+    "@rbxts/types": "^1.0.503",
+    "@typescript-eslint/eslint-plugin": "^4.28.2",
+    "@typescript-eslint/parser": "^4.28.2",
+    "concurrently": "^6.2.0",
+    "eslint": "^7.30.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-plugin-roblox-ts": "^0.0.29",
+    "prettier": "^2.3.2",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "@rbxts/net": "^2.1.3",
+    "@rbxts/roact": "*",
+    "@rbxts/roact-hooks": "*",
+    "@rbxts/services": "^1.1.5",
+    "@rbxts/t": "^2.1.4"
+  }
+}
