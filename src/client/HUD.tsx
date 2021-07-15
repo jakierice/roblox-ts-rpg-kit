@@ -3,42 +3,73 @@ import { t } from '@rbxts/t'
 import { ReplicatedStorage } from '@rbxts/services'
 import Hooks from '@rbxts/roact-hooks'
 
-export const AccessoryMenuUI: Hooks.FC = (props, { useEffect, useState }) => {
+const FullScreenOverlay = () => (
+  <screengui IgnoreGuiInset={true}>
+    <frame
+      Size={new UDim2(1, 0, 1, 0)}
+      Position={new UDim2(0, 0, 0, 0)}
+      BackgroundColor3={new Color3(0, 0, 0)}
+      BackgroundTransparency={0.4}
+    ></frame>
+  </screengui>
+)
+
+const ListSpacer = () => (
+  <frame
+    Size={new UDim2(1, 0, 0, 8)}
+    Position={new UDim2(0, 0, 0, 0)}
+    BackgroundTransparency={1}
+  ></frame>
+)
+
+export const AccessoryMenuUI: Hooks.FC<{ menuState: boolean }> = (
+  props,
+  { useEffect, useState },
+) => {
   const [accessories, setAccessories] = useState<Array<Accessory>>([])
-  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
-    print('Getting list of acccessories')
-
     const list = ReplicatedStorage.FindFirstChild('Accessories')?.GetChildren()
+
     if (t.array(t.intersection(t.instanceOf('Accessory')))(list)) {
       setAccessories(list)
     }
   }, [])
 
-  print('accessories', accessories)
+  print('Menu is open ', props.menuState)
 
-  return isOpen ? (
-    <screengui>
-      <frame
-        Size={new UDim2(1, 0, 1, 0)}
-        Position={new UDim2(0, 0, 0, 0)}
-        BackgroundColor3={new Color3(0, 0, 0)}
-        BackgroundTransparency={0.7}
-      >
-        <uilistlayout FillDirection="Vertical" />
-        <>
-          {accessories.map((accessory) => (
-            <textbutton
-              Size={new UDim2(0.5, 0, 0.2, 0)}
-              TextSize={24}
-              Text={accessory.Name}
-              TextColor3={new Color3(255, 255, 255)}
-            />
-          ))}
-        </>
-      </frame>
-    </screengui>
+  return props.menuState ? (
+    <>
+      <FullScreenOverlay />
+      <screengui>
+        <frame
+          Size={new UDim2(0.9, 0, 0.9, 0)}
+          Position={new UDim2(0.5, 0, 0.5, 0)}
+          AnchorPoint={new Vector2(0.5, 0.5)}
+          BackgroundColor3={new Color3(0, 0, 0)}
+          BackgroundTransparency={1}
+        >
+          <uilistlayout FillDirection="Vertical" Padding={new UDim(0, 8)} />
+          <>
+            {accessories.map((accessory) => (
+              <>
+                <textbutton
+                  Size={new UDim2(0.32, 0, 0, 32)}
+                  TextSize={12}
+                  Text={accessory.Name}
+                  TextColor3={new Color3(255, 255, 255)}
+                  BorderMode="Outline"
+                  BorderSizePixel={2}
+                  BorderColor3={new Color3(0, 255, 255)}
+                  BackgroundColor3={new Color3(0, 0, 0)}
+                />
+                <ListSpacer />
+              </>
+            ))}
+          </>
+        </frame>
+      </screengui>
+    </>
   ) : (
     <></>
   )
