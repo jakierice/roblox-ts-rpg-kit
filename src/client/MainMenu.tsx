@@ -1,5 +1,5 @@
 import Roact from '@rbxts/roact'
-import { ArmorMenu } from './ArmorMenu'
+import { WeaponsMenu } from './WeaponsMenu'
 
 const FullScreenOverlay = () => (
   <screengui IgnoreGuiInset={true}>
@@ -60,7 +60,7 @@ export const MainMenu = (props: MainMenuProps) => {
         Size={new UDim2(1, 0, 1, 0)}
         BackgroundTransparency={1}
       >
-        <ArmorMenu />
+        <WeaponsMenu />
       </frame>
     </screengui>
   )
