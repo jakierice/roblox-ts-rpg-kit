@@ -1,43 +1,56 @@
 import Roact from '@rbxts/roact'
-import { Players, UserInputService } from '@rbxts/services'
-import { AccessoryMenu } from './HUD'
+import {
+  GuiService,
+  Players,
+  StarterGui,
+  UserInputService,
+} from '@rbxts/services'
+import { HUD } from './HUD'
 import Hooks from '@rbxts/roact-hooks'
 
-const MenuButton = ({ onClick }: { onClick: () => void }) => (
-  <imagebutton
-    Image="rbxassetid://7097495552"
-    HoverImage="rbxassetid://7097576626"
-    Position={new UDim2(0.02, 0, 0.32, 0)}
-    Size={new UDim2(0, 72, 0, 72)}
-    Style="Custom"
-    ScaleType="Fit"
-    SliceScale={1}
-    Visible={true}
-    BackgroundTransparency={1}
-    Event={{ MouseButton1Click: onClick }}
-  />
-)
+import { MainMenu, MenuState, closed, open } from './MainMenu'
+import { match } from 'shared/matchers'
+import { pipe } from 'shared/fp-ts'
+
+StarterGui.SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 
 const PlayerUI = new Hooks(Roact)((_props, { useState, useEffect }) => {
-  const [isOpen, setIsOpen] = useState(false)
+  const [menuState, setMenuState] = useState<MenuState>(closed)
+
+  const toggleMenuIO = () =>
+    pipe(
+      menuState,
+      match({
+        open: () => closed,
+        closed: () => open,
+      }),
+      setMenuState,
+    )
+
+  const handleInput = (input: InputObject) => {
+    print('InputBegan')
+    if (input.KeyCode === Enum.KeyCode.Tab) {
+      setMenuState(open)
+    }
+
+    if (input.KeyCode === Enum.KeyCode.Backspace) {
+      setMenuState(closed)
+    }
+  }
 
   useEffect(() => {
-    UserInputService.InputBegan.Connect((input) => {
-      print('Key pressed ', input.KeyCode)
-      if (input.KeyCode === Enum.KeyCode.Tab && isOpen) {
-        setIsOpen(false)
-      }
-
-      if (input.KeyCode === Enum.KeyCode.Tab && !isOpen) {
-        setIsOpen(true)
-      }
-    })
+    UserInputService.InputBegan.Connect(handleInput)
   }, [])
 
   return (
     <screengui>
-      {!isOpen && <MenuButton onClick={() => setIsOpen(true)} />}
-      <AccessoryMenu menuState={isOpen} />
+      {pipe(
+        menuState,
+        match({
+          open: () => <MainMenu onCloseButtonClick={toggleMenuIO} />,
+          closed: () => <HUD onMenuButtonClick={toggleMenuIO} />,
+        }),
+      )}
     </screengui>
   )
 })
