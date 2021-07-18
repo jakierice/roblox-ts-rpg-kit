@@ -1,3 +1,18 @@
-export const startMessage = 'This is the beginning of great things to come.'
+import { Remotes } from "shared/remotes"
 
-print(startMessage)
+const EquipWeapon = Remotes.Server.Create("EquipWeapon")
+const UnequipWeapon = Remotes.Server.Create("UnequipWeapon")
+
+EquipWeapon.SetCallback((player, weapon) => {
+  const humanoid = player.Character?.FindFirstChildOfClass("Humanoid")
+  humanoid?.EquipTool(weapon)
+
+  return `Weapon has been equipped!`
+})
+
+UnequipWeapon.SetCallback((player) => {
+  const humanoid = player.Character?.FindFirstChildOfClass("Humanoid")
+  humanoid?.UnequipTools()
+
+  return `Weapon has been unequipped!`
+})

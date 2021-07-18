@@ -1,2 +1,2 @@
-export const noOpIO = () => undefined
+export const noOpIO: () => void = () => {}
 export const runIO = (io: () => void) => io()

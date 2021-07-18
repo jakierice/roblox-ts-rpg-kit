@@ -1,16 +1,16 @@
-import Roact from '@rbxts/roact'
+import Roact from "@rbxts/roact"
 import {
   GuiService,
   Players,
   StarterGui,
   UserInputService,
-} from '@rbxts/services'
-import { HUD } from './HUD'
-import Hooks from '@rbxts/roact-hooks'
+} from "@rbxts/services"
+import { HUD } from "./HUD"
+import Hooks from "@rbxts/roact-hooks"
 
-import { MainMenu, MenuState, closed, open } from './MainMenu'
-import { match } from 'shared/matchers'
-import { pipe } from 'shared/fp-ts'
+import { MainMenu, MenuState, closed, open } from "./MainMenu"
+import { match } from "shared/matchers"
+import { pipe } from "shared/fp-ts"
 
 StarterGui.SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 
@@ -24,16 +24,15 @@ const PlayerUI = new Hooks(Roact)((_props, { useState, useEffect }) => {
         open: () => closed,
         closed: () => open,
       }),
-      setMenuState,
+      setMenuState
     )
 
   const handleInput = (input: InputObject) => {
-    print('InputBegan')
     if (input.KeyCode === Enum.KeyCode.Tab) {
       setMenuState(open)
     }
 
-    if (input.KeyCode === Enum.KeyCode.Backspace) {
+    if (input.KeyCode === Enum.KeyCode.Return) {
       setMenuState(closed)
     }
   }
@@ -49,7 +48,7 @@ const PlayerUI = new Hooks(Roact)((_props, { useState, useEffect }) => {
         match({
           open: () => <MainMenu onCloseButtonClick={toggleMenuIO} />,
           closed: () => <HUD onMenuButtonClick={toggleMenuIO} />,
-        }),
+        })
       )}
     </screengui>
   )
@@ -57,5 +56,5 @@ const PlayerUI = new Hooks(Roact)((_props, { useState, useEffect }) => {
 
 Roact.mount(
   <PlayerUI />,
-  Players.LocalPlayer.FindFirstChildOfClass('PlayerGui'),
+  Players.LocalPlayer.FindFirstChildOfClass("PlayerGui")
 )
