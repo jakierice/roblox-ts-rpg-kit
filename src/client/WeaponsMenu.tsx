@@ -8,7 +8,7 @@ import { A, O, pipe } from "shared/fp-ts"
 import { noOpIO } from "shared/fp/fp-ts-ext"
 import { flow } from "shared/fp/function"
 import { List, ListItemButton } from "./List"
-import { black } from "./Color"
+import { makePaddingAll } from "./UI.utilities"
 
 const EquipWeapon = Remotes.Client.Get("EquipWeapon")
 const UnequipWeapon = Remotes.Client.Get("UnequipWeapon")
@@ -24,13 +24,6 @@ const getBackpackWeapons: (backpack: Backpack) => O.Option<Array<Tool>> = flow(
   A.filter(t.instanceOf("Tool")),
   O.fromPredicate(A.isNonEmpty)
 )
-
-const makePaddingAll = (padding: UDim) => ({
-  PaddingTop: padding,
-  PaddingRight: padding,
-  PaddingBottom: padding,
-  PaddingLeft: padding,
-})
 
 const ListWrapper: Roact.FunctionComponent = (props) => {
   return (
@@ -80,16 +73,10 @@ export const WeaponsMenu = new Hooks(Roact)(
     const addBackpackListenersIO = flow(
       getBackpack,
       O.map((bp) => {
-        const added = bp.ChildAdded.Connect(setWeaponsIO)
-        const removed = bp.ChildRemoved.Connect(setWeaponsIO)
-
-        // Returning an IO that disconnects the listeners makes sure that jgg
-        return () => {
-          added.Disconnect()
-          removed.Disconnect()
-        }
+        bp.ChildAdded.Connect(setWeaponsIO)
+        bp.ChildRemoved.Connect(setWeaponsIO)
       }),
-      O.getOrElse(() => noOpIO)
+      O.getOrElse(noOpIO)
     )
 
     // Note: Get and set weapons from the Backpack for for initial state.
