@@ -5,9 +5,10 @@ import Hooks from "@rbxts/roact-hooks"
 import { Remotes } from "shared/remotes"
 import { A, E, O, pipe } from "shared/fp-ts"
 import { List, ListItemButton } from "./List"
-import { Players, ReplicatedStorage } from "@rbxts/services"
+import { Players } from "@rbxts/services"
 import { makePaddingAll } from "./UI.utilities"
-import { neonBlue } from "./Color"
+import { noOpIO } from "shared/fp/fp-ts-ext"
+import { getWearables, wearableD } from "shared/Wearable.domain"
 
 const AttachWearable = Remotes.Client.Get("AttachWearable")
 const DetachWearable = Remotes.Client.Get("DetachWearable")
@@ -25,23 +26,6 @@ const CurrentEquipmentWrapper: Roact.FunctionComponent = (props) => {
   )
 }
 
-const wearableD = t.intersection(
-  t.instanceOf("Accessory"),
-  t.children({ DisplayName: t.instanceOf("StringValue") })
-)
-
-const getWearables = (replicatedStorage: ReplicatedStorage) =>
-  pipe(
-    replicatedStorage.FindFirstChild("Wearables"),
-    E.decode(t.instanceOf("Folder")),
-    E.map((a) => a.GetChildren()),
-    E.map((as) => {
-      print("Stuff from Wearables folder", as)
-      return as
-    }),
-    E.chain(E.decode(t.array(wearableD)))
-  )
-
 const ListWrapper: Roact.FunctionComponent = (props) => {
   return (
     <frame Size={new UDim2(0.32, 0, 1, 0)} BackgroundTransparency={1}>
@@ -54,32 +38,63 @@ const ListWrapper: Roact.FunctionComponent = (props) => {
 export type Wearable = t.static<typeof wearableD>
 
 export const ArmorMenu = new Hooks(Roact)((_props, { useEffect, useState }) => {
-  const [wearables, setWearables] = useState<
-    O.Option<E.Either<string, Array<Wearable>>>
-  >(O.none)
+  const [wearables, setWearables] = useState<O.Option<Array<Wearable>>>(O.none)
   const [attachedAccessories, setAttachedAccessories] = useState<
     O.Option<Array<Wearable>>
   >(O.none)
 
-  const setAccessoriesIO = () =>
-    pipe(ReplicatedStorage, getWearables, O.some, setWearables)
-
-  useEffect(setAccessoriesIO, [])
-
-  useEffect(() => {
-    const accessories =
-      Players.LocalPlayer.Character?.FindFirstChildOfClass(
-        "Humanoid"
-      )?.GetAccessories()
+  const getAccessoriesIO = () => {
+    const humanoid =
+      Players.LocalPlayer.Character?.FindFirstChildOfClass("Humanoid")
+    const accessories = humanoid?.GetAccessories()
 
     pipe(
       accessories,
       O.fromPredicate(t.array(wearableD)),
       setAttachedAccessories
     )
-  }, [])
+  }
 
-  print("wearables: ", wearables)
+  const getWearablesIO = pipe(
+    Players.LocalPlayer,
+    getWearables,
+    E.fold(
+      (e) => () => print("Could not get Player wearables. Error: ", e),
+      (ws) => () => setWearables(O.some(ws))
+    )
+  )
+
+  const addAccessoriesListeners = pipe(
+    attachedAccessories,
+    O.map((as) => () => {
+      as.forEach((a) => {
+        a.AncestryChanged.Connect(() => {
+          print("Ancestry of an accessory changed.")
+          getAccessoriesIO()
+        })
+      })
+      return as
+    }),
+    O.getOrElse(() => noOpIO)
+  )
+  const addWearablesListeners = pipe(
+    wearables,
+    O.map((ws) => () => {
+      ws.forEach((w) => {
+        w.AncestryChanged.Connect(() => {
+          "Ancestry of a wearable changed."
+          getWearablesIO()
+        })
+      })
+      return ws
+    }),
+    O.getOrElse(() => noOpIO)
+  )
+
+  useEffect(getWearablesIO, [])
+  useEffect(getAccessoriesIO, [])
+  useEffect(addWearablesListeners, [wearables])
+  useEffect(addAccessoriesListeners, [attachedAccessories])
 
   return (
     <>
@@ -88,47 +103,40 @@ export const ArmorMenu = new Hooks(Roact)((_props, { useEffect, useState }) => {
           {pipe(
             wearables,
             O.map(
-              E.fold(
-                (a) => [
-                  <textlabel
-                    Text={a}
-                    TextColor3={neonBlue}
-                    TextSize={24}
-                    TextWrap={true}
-                    Size={new UDim2(1, 0, 1, 0)}
-                    TextXAlignment="Center"
-                    BackgroundTransparency={1}
-                  >
-                    <uipadding {...makePaddingAll(new UDim(0, 8))} />
-                  </textlabel>,
-                ],
-                A.map((wearable) => (
-                  <ListItemButton
-                    isActive={true}
-                    text={wearable.DisplayName.Value}
-                    onClick={() => AttachWearable.CallServerAsync(wearable)}
-                  />
-                ))
-              )
+              A.map((wearable) => (
+                <ListItemButton
+                  isActive={true}
+                  text={wearable.DisplayName.Value}
+                  onClick={() => AttachWearable.CallServerAsync(wearable)}
+                />
+              ))
             ),
-            O.toUndefined
+            O.getOrElse(() => [
+              <ListItemButton
+                isActive={true}
+                text="You don't have any Wearables"
+                onClick={noOpIO}
+              />,
+            ])
           )}
         </List>
       </ListWrapper>
       <CurrentEquipmentWrapper>
-        {pipe(
-          attachedAccessories,
-          O.map(
-            A.map((wearable) => (
-              <ListItemButton
-                isActive={true}
-                text={wearable.DisplayName.Value + " [E]"}
-                onClick={() => DetachWearable.CallServerAsync(wearable)}
-              />
-            ))
-          ),
-          O.toUndefined
-        )}
+        <List padding={new UDim(0, 0)}>
+          {pipe(
+            attachedAccessories,
+            O.map(
+              A.map((wearable) => (
+                <ListItemButton
+                  isActive={true}
+                  text={wearable.DisplayName.Value + " [E]"}
+                  onClick={() => DetachWearable.CallServerAsync(wearable)}
+                />
+              ))
+            ),
+            O.toUndefined
+          )}
+        </List>
       </CurrentEquipmentWrapper>
     </>
   )

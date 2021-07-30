@@ -1,4 +1,7 @@
+import { Players } from "@rbxts/services"
+import { E, O, pipe } from "shared/fp-ts"
 import { Remotes } from "shared/remotes"
+import { getReplicatedStorageWearables } from "shared/Wearable.domain"
 
 const EquipWeapon = Remotes.Server.Create("EquipWeapon")
 const UnequipWeapon = Remotes.Server.Create("UnequipWeapon")
@@ -29,10 +32,30 @@ AttachWearable.SetCallback((player, wearable) => {
 DetachWearable.SetCallback((player, wearable) => {
   const humanoid = player.Character?.FindFirstChildOfClass("Humanoid")
   const currentAccessories = humanoid?.GetAccessories()
+  const wearablesFolder = player.FindFirstChildOfClass("Folder")
 
   const targetAccessory = currentAccessories?.find((a) => a === wearable)
 
-  targetAccessory?.Destroy()
+  if (targetAccessory) {
+    targetAccessory.Parent = wearablesFolder
+  }
 
   return `Accessory has been detached!`
 })
+
+// initialize player inventory
+Players.PlayerAdded.Connect((player) =>
+  pipe(getReplicatedStorageWearables, (ws) => {
+    const wearablesFolder = new Instance("Folder")
+    wearablesFolder.Name = "Wearables"
+
+    if (E.isRight(ws)) {
+      wearablesFolder.Parent = player
+
+      ws.right.forEach((w) => {
+        const clone = w.Clone()
+        clone.Parent = wearablesFolder
+      })
+    }
+  })
+)
