@@ -3,12 +3,19 @@ import { t } from "@rbxts/t"
 import Hooks from "@rbxts/roact-hooks"
 
 import { Remotes } from "shared/remotes"
-import { A, E, O, pipe } from "shared/fp-ts"
+import { A, E, Eq, O, pipe } from "shared/fp-ts"
 import { List, ListItemButton } from "./List"
 import { Players } from "@rbxts/services"
 import { makePaddingAll } from "./UI.utilities"
 import { noOpIO } from "shared/fp/fp-ts-ext"
-import { getWearables, wearableD } from "shared/Wearable.domain"
+import {
+  eqWearable,
+  getWearables,
+  Wearable,
+  wearableD,
+} from "shared/Wearable.domain"
+import { useIO } from "./useIO"
+import { tuple } from "shared/fp/function"
 
 const AttachWearable = Remotes.Client.Get("AttachWearable")
 const DetachWearable = Remotes.Client.Get("DetachWearable")
@@ -35,15 +42,14 @@ const ListWrapper: Roact.FunctionComponent = (props) => {
   )
 }
 
-export type Wearable = t.static<typeof wearableD>
-
-export const ArmorMenu = new Hooks(Roact)((_props, { useEffect, useState }) => {
+export const ArmorMenu = new Hooks(Roact)((_props, hooks) => {
+  const { useState } = hooks
   const [wearables, setWearables] = useState<O.Option<Array<Wearable>>>(O.none)
   const [attachedAccessories, setAttachedAccessories] = useState<
     O.Option<Array<Wearable>>
   >(O.none)
 
-  const getAccessoriesIO = () => {
+  const getAccessoriesIO: () => void = () => {
     const humanoid =
       Players.LocalPlayer.Character?.FindFirstChildOfClass("Humanoid")
     const accessories = humanoid?.GetAccessories()
@@ -55,7 +61,7 @@ export const ArmorMenu = new Hooks(Roact)((_props, { useEffect, useState }) => {
     )
   }
 
-  const getWearablesIO = pipe(
+  const getWearablesIO: () => void = pipe(
     Players.LocalPlayer,
     getWearables,
     E.fold(
@@ -64,37 +70,52 @@ export const ArmorMenu = new Hooks(Roact)((_props, { useEffect, useState }) => {
     )
   )
 
-  const addAccessoriesListeners = pipe(
-    attachedAccessories,
-    O.map((as) => () => {
-      as.forEach((a) => {
-        a.AncestryChanged.Connect(() => {
-          print("Ancestry of an accessory changed.")
-          getAccessoriesIO()
-        })
-      })
-      return as
-    }),
-    O.getOrElse(() => noOpIO)
-  )
-  const addWearablesListeners = pipe(
-    wearables,
-    O.map((ws) => () => {
-      ws.forEach((w) => {
-        w.AncestryChanged.Connect(() => {
-          "Ancestry of a wearable changed."
-          getWearablesIO()
-        })
-      })
-      return ws
-    }),
-    O.getOrElse(() => noOpIO)
-  )
+  // const addAccessoriesListeners: () => void = pipe(
+  //   attachedAccessories,
+  //   O.map((as) => () => {
+  //     as.forEach((a) => {
+  //       a.AncestryChanged.Connect(() => {
+  //         print("Ancestry of an accessory changed.")
+  //         getAccessoriesIO()
+  //       })
+  //     })
+  //     return as
+  //   }),
+  //   O.getOrElse(() => noOpIO)
+  // )
+  // const addWearablesListeners: () => void = pipe(
+  //   wearables,
+  //   O.map((ws) => () => {
+  //     ws.forEach((w) => {
+  //       w.AncestryChanged.Connect(() => {
+  //         print("Ancestry of an accessory changed.")
+  //         ;("Ancestry of a wearable changed.")
+  //         getWearablesIO()
+  //       })
+  //     })
+  //     return ws
+  //   }),
+  //   O.getOrElse(() => noOpIO)
+  // )
 
-  useEffect(getWearablesIO, [])
-  useEffect(getAccessoriesIO, [])
-  useEffect(addWearablesListeners, [wearables])
-  useEffect(addAccessoriesListeners, [attachedAccessories])
+  // const eqOptionArrayWearables = O.getEq(A.getEq(eqWearable))
+
+  useIO(getWearablesIO, tuple(), Eq.tuple(), hooks)
+  useIO(getAccessoriesIO, tuple(), Eq.tuple(), hooks)
+  // useIO(
+  //   addWearablesListeners,
+  //   tuple(wearables),
+  //   Eq.tuple(eqOptionArrayWearables),
+  //   hooks
+  // )
+  // useIO(
+  //   addAccessoriesListeners,
+  //   tuple(attachedAccessories),
+  //   Eq.tuple(eqOptionArrayWearables),
+  //   hooks
+  // )
+  // // useEffect(addWearablesListeners, [wearables])
+  // useEffect(addAccessoriesListeners, [attachedAccessories])
 
   return (
     <>

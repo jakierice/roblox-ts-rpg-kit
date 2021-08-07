@@ -1,5 +1,5 @@
 import Net from "@rbxts/net"
-import { Wearable } from "client/ArmorMenu"
+import { Wearable } from "shared/Wearable.domain"
 
 export const Remotes = Net.Definitions.Create({
   PrintMessage: Net.Definitions.ClientToServerEvent<[message: string]>(),

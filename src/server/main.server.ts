@@ -1,5 +1,5 @@
 import { Players } from "@rbxts/services"
-import { E, O, pipe } from "shared/fp-ts"
+import { E, pipe } from "shared/fp-ts"
 import { Remotes } from "shared/remotes"
 import { getReplicatedStorageWearables } from "shared/Wearable.domain"
 
