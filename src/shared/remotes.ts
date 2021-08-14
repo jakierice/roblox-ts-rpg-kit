@@ -1,6 +1,6 @@
 import Net from "@rbxts/net";
 import { Wearable } from "shared/Wearable.domain";
-import { O } from "./fp-ts";
+import { E, O } from "./fp-ts";
 
 export const Remotes = Net.Definitions.Create({
   PrintMessage: Net.Definitions.ClientToServerEvent<[message: string]>(),
@@ -13,5 +13,9 @@ export const Remotes = Net.Definitions.Create({
   DetachWearable:
     Net.Definitions.ServerAsyncFunction<
       (wearable: Wearable) => O.Option<Array<Wearable>>
+    >(),
+  PurchaseWearable:
+    Net.Definitions.ServerAsyncFunction<
+      (wearable: Wearable) => E.Either<string, Wearable>
     >(),
 });

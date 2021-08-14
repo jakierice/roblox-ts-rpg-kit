@@ -84,32 +84,6 @@ export const ArmorMenu = new Hooks(Roact)(
       Eq.tuple(O.getEq(A.getEq(eqWearable)))
     );
 
-    /*     useIO( */
-    /*       () => { */
-    /*         const wearablesFolder = Players.LocalPlayer.FindFirstChild("Wearables"); */
-
-    /*         const wearableDetachedListener = wearablesFolder?.ChildAdded.Connect( */
-    /*           () => { */
-    /*             getWearablesIO(); */
-    /*             getAccessoriesIO(); */
-    /*           } */
-    /*         ); */
-    /*         const wearableAttachedListener = wearablesFolder?.ChildRemoved.Connect( */
-    /*           () => { */
-    /*             getWearablesIO(); */
-    /*             getAccessoriesIO(); */
-    /*           } */
-    /*         ); */
-
-    /*         return () => { */
-    /*           wearableDetachedListener?.Disconnect(); */
-    /*           wearableAttachedListener?.Disconnect(); */
-    /*         }; */
-    /*       }, */
-    /*       tuple(), */
-    /*       Eq.tuple() */
-    /*     ); */
-
     return (
       <>
         <ListWrapper>

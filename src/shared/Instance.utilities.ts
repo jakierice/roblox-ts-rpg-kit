@@ -15,3 +15,6 @@ export const findFirstChild = (childName: string) => (instance: Instance) =>
     (i) => i.FindFirstChild(childName),
     O.fromPredicate(t.Instance)
   );
+
+export const getChildren = (instance: Instance) => instance.GetChildren();
+
