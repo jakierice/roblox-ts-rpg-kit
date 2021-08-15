@@ -1,15 +1,21 @@
+import Hooks, { CoreHooks } from "@rbxts/roact-hooks";
 import Roact from "@rbxts/roact";
-import { A, pipe, E } from "shared/fp-ts";
-import { noOpIO } from "shared/fp/fp-ts-ext";
-import { match } from "shared/matchers";
-import { Wearable } from "shared/Wearable.domain";
+import { A, pipe, E, O, Eq } from "shared/fp-ts";
 import { ArmorMenu } from "./ArmorMenu";
-import { neonBlue } from "./Color";
 import { FullScreenModalHeader, FullScreenOverlay } from "./FullScreenModal";
-import { makePaddingAll } from "./UI.utilities";
-import { WeaponsMenu } from "./WeaponsMenu";
+import { HUD } from "./HUD";
 import { List, ListItemButton } from "./List";
 import { Remotes } from "shared/remotes";
+import { WeaponsMenu } from "./WeaponsMenu";
+import { Wearable, wearableD } from "shared/Wearable.domain";
+import { makePaddingAll } from "./UI.utilities";
+import { makeUseIO } from "./useIO";
+import { match } from "shared/matchers";
+import { neonBlue } from "./Color";
+import { noOpIO } from "shared/fp/fp-ts-ext";
+import { shopMenuTriggers } from "shared/Shop.domain";
+import { t } from "@rbxts/t";
+import { tuple } from "shared/fp/function";
 
 const PurchaseWearable = Remotes.Client.Get("PurchaseWearable");
 
@@ -99,7 +105,7 @@ export const InventoryMenu = (props: InventoryMenuProps) => {
   );
 };
 
-const ListWrapper: Roact.FunctionComponent = (props) => {
+const MenuSidebarList: Roact.FunctionComponent = (props) => {
   return (
     <frame Size={new UDim2(0.32, 0, 1, 0)} BackgroundTransparency={1}>
       {props[Roact.Children]}
@@ -122,14 +128,14 @@ export const ArmorShopMenu = (props: {
         BackgroundTransparency={1}
       >
         <uilistlayout FillDirection="Horizontal" Padding={new UDim(0, 8)} />
-        <MenuTabButton text="Weapons" onClick={noOpIO} />
+        <MenuTabButton text="For Sale" onClick={noOpIO} />
       </frame>
       <frame
         Position={new UDim2(0, 0, 0, 80)}
         Size={new UDim2(1, 0, 1, 0)}
         BackgroundTransparency={1}
       >
-        <ListWrapper>
+        <MenuSidebarList>
           <List padding={new UDim(0, 0)}>
             {pipe(
               props.wearables,
@@ -148,8 +154,81 @@ export const ArmorShopMenu = (props: {
               ))
             )}
           </List>
-        </ListWrapper>
+        </MenuSidebarList>
       </frame>
     </screengui>
   );
 };
+
+const useMenu = ({ useState }: { useState: CoreHooks["useState"] }) => {
+  const [menuState, setMenuState] = useState<MenuState>(closed);
+
+  const toggleMenu = () =>
+    pipe(
+      menuState,
+      match({
+        inventory: () => closed,
+        armorShop: () => closed,
+        closed: () => inventory(weaponsTab),
+      }),
+      setMenuState
+    );
+
+  const addTriggerEvents = pipe(
+    shopMenuTriggers,
+    O.map(
+      (ts) => () =>
+        ts.forEach((trigger) => {
+          trigger.Transparency = 1;
+          const wearables = pipe(
+            trigger.StockFolder.Value?.GetChildren(),
+            O.fromPredicate(t.array(wearableD))
+          );
+
+          trigger.Touched.Connect(() => {
+            if (O.isSome(wearables) && menuState.tag !== "armorShop") {
+              setMenuState(armorShop(wearables.value));
+            }
+          });
+        })
+    ),
+    O.getOrElse(() => noOpIO)
+  );
+
+  return { menuState, setMenuState, addTriggerEvents, toggleMenu };
+};
+
+export const MainMenu = new Hooks(Roact)(
+  (_props, { useState, useEffect, useValue }) => {
+    const useIO = makeUseIO(useEffect, useValue);
+    const { menuState, setMenuState, addTriggerEvents, toggleMenu } = useMenu({
+      useState,
+    });
+
+    useIO(addTriggerEvents, tuple(), Eq.tuple());
+
+    return (
+      <screengui>
+        {pipe(
+          menuState,
+          match({
+            inventory: ({ tab }) => (
+              <InventoryMenu
+                onCloseButtonClick={toggleMenu}
+                tab={tab}
+                onTabClick={(t) => setMenuState(inventory(t))}
+              />
+            ),
+            armorShop: ({ wearables }) => (
+              <ArmorShopMenu
+                wearables={wearables}
+                onCloseButtonClick={toggleMenu}
+              />
+            ),
+            closed: () => <HUD onMenuButtonClick={toggleMenu} />,
+          })
+        )}
+      </screengui>
+    );
+  }
+);
