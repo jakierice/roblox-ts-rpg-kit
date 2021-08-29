@@ -1,5 +1,6 @@
 import { t } from "@rbxts/t"
 import { Either } from "./Either"
+import { Eq } from "./Eq"
 import { Lazy, Predicate, Refinement } from "./function"
 
 export type Option<A> = { tag: "None" } | { tag: "Some"; value: A }
@@ -111,3 +112,9 @@ export const filter: {
   <A>(predicate: Predicate<A>) =>
   (fa: Option<A>) =>
     isNone(fa) ? none : predicate(fa.value) ? fa : none
+
+export const getEq = <A>(E: Eq<A>): Eq<Option<A>> => ({
+  equals: (x, y) =>
+    x === y ||
+    (isNone(x) ? isNone(y) : isNone(y) ? false : E.equals(x.value, y.value)),
+})

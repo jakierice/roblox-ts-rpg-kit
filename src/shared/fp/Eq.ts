@@ -56,9 +56,9 @@ const contramap_: <A, B>(fa: Eq<A>, f: (b: B) => A) => Eq<B> = (fa, f) =>
  * @category Contravariant
  * @since 2.0.0
  */
-export const contramap: <A, B>(f: (b: B) => A) => (fa: Eq<A>) => Eq<B> = (
-  f
-) => (fa) => fromEquals((x, y) => fa.equals(f(x), f(y)))
+export const contramap: <A, B>(f: (b: B) => A) => (fa: Eq<A>) => Eq<B> =
+  (f) => (fa) =>
+    fromEquals((x, y) => fa.equals(f(x), f(y)))
 
 // -------------------------------------------------------------------------------------
 // instances
@@ -135,6 +135,12 @@ export const eqBoolean: Eq<boolean> = eqStrict
 //     return true
 //   })
 // }
+export const tuple = <A extends ReadonlyArray<unknown>>(
+  ...eqs: { [K in keyof A]: Eq<A[K]> }
+): Eq<Readonly<A>> =>
+  fromEquals((first, second) =>
+    eqs.every((E, i) => E.equals(first[i], second[i]))
+  )
 
 /**
  * Given a tuple of `Eq`s returns a `Eq` for the tuple
@@ -151,11 +157,11 @@ export const eqBoolean: Eq<boolean> = eqStrict
  * @category instances
  * @since 2.0.0
  */
-// export function getTupleEq<T extends ReadonlyArray<Eq<any>>>(
-//   ...eqs: T
-// ): Eq<{ [K in keyof T]: T[K] extends Eq<infer A> ? A : never }> {
-//   return fromEquals((x, y) => eqs.every((E, i) => E.equals(x[i], y[i])))
-// }
+export function getTupleEq<T extends ReadonlyArray<Eq<unknown>>>(
+  ...eqs: T
+): Eq<{ [K in keyof T]: T[K] extends Eq<infer A> ? A : never }> {
+  return fromEquals((x, y) => eqs.every((E, i) => E.equals(x[i], y[i])))
+}
 
 /**
  * @category instances

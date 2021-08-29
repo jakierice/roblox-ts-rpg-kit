@@ -1,4 +1,5 @@
 import * as O from "./Option"
+import * as Eq from "./Eq"
 import { Predicate, Refinement } from "./function"
 
 export const map: <A, B>(f: (a: A) => B) => (fa: Array<A>) => Array<B> =
@@ -45,3 +46,9 @@ export const append: <A>(a: A) => (init: Array<A>) => Array<A> =
 
 export const isEmpty: <A>(fa: Array<A>) => boolean = (fa) => fa.size() === 0
 export const isNonEmpty: <A>(fa: Array<A>) => boolean = (fa) => fa.size() >= 1
+
+export const getEq = <A>(E: Eq.Eq<A>): Eq.Eq<Array<A>> =>
+  Eq.fromEquals(
+    (xs, ys) =>
+      xs.size() === ys.size() && xs.every((x, i) => E.equals(x, ys[i]))
+  )
