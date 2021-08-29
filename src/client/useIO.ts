@@ -1,16 +1,16 @@
-import { CoreHooks } from "@rbxts/roact-hooks";
-import { Eq } from "shared/fp-ts";
+import { HookFunctions } from "@rbxts/roact-hooks"
+import { Eq } from "shared/fp-ts"
 
 export function useStable<T>(
   value: T,
   E: Eq.Eq<T>,
-  useValue: CoreHooks["useValue"]
+  useValue: HookFunctions["useValue"]
 ): T {
-  const ref = useValue<T>(value);
+  const ref = useValue<T>(value)
   if (!E.equals(ref.value, value)) {
-    ref.value = value;
+    ref.value = value
   }
-  return ref.value;
+  return ref.value
 }
 
 /**
@@ -18,15 +18,19 @@ export function useStable<T>(
  * Eq-backed dependencies.
  */
 export const useIO =
-  (useEffect: CoreHooks["useEffect"], useValue: CoreHooks["useValue"]) =>
+  (
+    useEffect: HookFunctions["useEffect"],
+    useValue: HookFunctions["useValue"]
+  ) =>
   <T extends Array<unknown>>(io: () => void, dependencies: T, eq: Eq.Eq<T>) => {
-    const deps = useStable(dependencies, eq, useValue);
+    const deps = useStable(dependencies, eq, useValue)
 
     useEffect(() => {
-      io();
-    }, deps);
-  };
+      io()
+    }, deps)
+  }
 
-export const makeUseIO =
-  (useEffect: CoreHooks["useEffect"], useValue: CoreHooks["useValue"]) => 
-    useIO(useEffect, useValue);
+export const makeUseIO = (
+  useEffect: HookFunctions["useEffect"],
+  useValue: HookFunctions["useValue"]
+) => useIO(useEffect, useValue)

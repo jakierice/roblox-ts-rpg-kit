@@ -1,51 +1,51 @@
-import Hooks, { CoreHooks } from "@rbxts/roact-hooks";
-import Roact from "@rbxts/roact";
-import { A, pipe, E, O, Eq } from "shared/fp-ts";
-import { ArmorMenu } from "./ArmorMenu";
-import { FullScreenModalHeader, FullScreenOverlay } from "./FullScreenModal";
-import { HUD } from "./HUD";
-import { List, ListItemButton } from "./List";
-import { Remotes } from "shared/remotes";
-import { WeaponsMenu } from "./WeaponsMenu";
-import { Wearable, wearableD } from "shared/Wearable.domain";
-import { makePaddingAll } from "./UI.utilities";
-import { makeUseIO } from "./useIO";
-import { match } from "shared/matchers";
-import { neonBlue } from "./Color";
-import { noOpIO } from "shared/fp/fp-ts-ext";
-import { shopMenuTriggers } from "shared/Shop.domain";
-import { t } from "@rbxts/t";
-import { tuple } from "shared/fp/function";
+import Hooks, { HookFunctions } from "@rbxts/roact-hooks"
+import Roact from "@rbxts/roact"
+import { A, pipe, E, O, Eq } from "shared/fp-ts"
+import { ArmorMenu } from "./ArmorMenu"
+import { FullScreenModalHeader, FullScreenOverlay } from "./FullScreenModal"
+import { HUD } from "./HUD"
+import { List, ListItemButton } from "./List"
+import { Remotes } from "shared/remotes"
+import { WeaponsMenu } from "./WeaponsMenu"
+import { Wearable, wearableD } from "shared/Wearable.domain"
+import { makePaddingAll } from "./UI.utilities"
+import { makeUseIO } from "./useIO"
+import { match } from "shared/matchers"
+import { neonBlue } from "./Color"
+import { noOpIO } from "shared/fp/fp-ts-ext"
+import { shopMenuTriggers } from "shared/Shop.domain"
+import { t } from "@rbxts/t"
+import { tuple } from "shared/fp/function"
 
-const PurchaseWearable = Remotes.Client.Get("PurchaseWearable");
+const PurchaseWearable = Remotes.Client.Get("PurchaseWearable")
 
-export type WeaponsTab = { tag: "weapons" };
-export const weaponsTab: WeaponsTab = { tag: "weapons" };
-export type ArmorTab = { tag: "armor" };
-export const armorTab: ArmorTab = { tag: "armor" };
-export type InventoryTab = WeaponsTab | ArmorTab;
+export type WeaponsTab = { tag: "weapons" }
+export const weaponsTab: WeaponsTab = { tag: "weapons" }
+export type ArmorTab = { tag: "armor" }
+export const armorTab: ArmorTab = { tag: "armor" }
+export type InventoryTab = WeaponsTab | ArmorTab
 
-export type Inventory = { tag: "inventory"; tab: InventoryTab };
+export type Inventory = { tag: "inventory"; tab: InventoryTab }
 export const inventory = (tab: InventoryTab): Inventory => ({
   tag: "inventory",
   tab,
-});
+})
 
-export type ArmorShop = { tag: "armorShop"; wearables: Array<Wearable> };
+export type ArmorShop = { tag: "armorShop"; wearables: Array<Wearable> }
 export const armorShop = (wearables: Array<Wearable>): ArmorShop => ({
   tag: "armorShop",
   wearables,
-});
+})
 
-export type Closed = { tag: "closed" };
-export const closed: Closed = { tag: "closed" };
+export type Closed = { tag: "closed" }
+export const closed: Closed = { tag: "closed" }
 
-export type MenuState = ArmorShop | Inventory | Closed;
+export type MenuState = ArmorShop | Inventory | Closed
 
 export const isOpen = (menuState: MenuState): menuState is Inventory =>
-  menuState.tag === "inventory";
+  menuState.tag === "inventory"
 export const isClosed = (menuState: MenuState): menuState is Closed =>
-  menuState.tag === "closed";
+  menuState.tag === "closed"
 
 const MenuTabButton = (props: { text: string; onClick: () => void }) => {
   return (
@@ -62,13 +62,13 @@ const MenuTabButton = (props: { text: string; onClick: () => void }) => {
     >
       <uipadding {...makePaddingAll(new UDim(0, 8))} />
     </textbutton>
-  );
-};
+  )
+}
 
 interface InventoryMenuProps {
-  onCloseButtonClick: () => void;
-  tab: InventoryTab;
-  onTabClick: (tab: InventoryTab) => void;
+  onCloseButtonClick: () => void
+  tab: InventoryTab
+  onTabClick: (tab: InventoryTab) => void
 }
 
 export const InventoryMenu = (props: InventoryMenuProps) => {
@@ -102,8 +102,8 @@ export const InventoryMenu = (props: InventoryMenuProps) => {
         )}
       </frame>
     </screengui>
-  );
-};
+  )
+}
 
 const MenuSidebarList: Roact.FunctionComponent = (props) => {
   return (
@@ -111,12 +111,12 @@ const MenuSidebarList: Roact.FunctionComponent = (props) => {
       {props[Roact.Children]}
       <uipadding {...makePaddingAll(new UDim(0, 8))} />
     </frame>
-  );
-};
+  )
+}
 
 export const ArmorShopMenu = (props: {
-  wearables: Array<Wearable>;
-  onCloseButtonClick: () => void;
+  wearables: Array<Wearable>
+  onCloseButtonClick: () => void
 }) => {
   return (
     <screengui>
@@ -146,7 +146,7 @@ export const ArmorShopMenu = (props: {
                   onClick={() =>
                     PurchaseWearable.CallServerAsync(wearable).then((res) => {
                       if (E.isLeft(res)) {
-                        print(res.left);
+                        print(res.left)
                       }
                     })
                   }
@@ -157,11 +157,11 @@ export const ArmorShopMenu = (props: {
         </MenuSidebarList>
       </frame>
     </screengui>
-  );
-};
+  )
+}
 
-const useMenu = ({ useState }: { useState: CoreHooks["useState"] }) => {
-  const [menuState, setMenuState] = useState<MenuState>(closed);
+const useMenu = ({ useState }: { useState: HookFunctions["useState"] }) => {
+  const [menuState, setMenuState] = useState<MenuState>(closed)
 
   const toggleMenu = () =>
     pipe(
@@ -172,40 +172,40 @@ const useMenu = ({ useState }: { useState: CoreHooks["useState"] }) => {
         closed: () => inventory(weaponsTab),
       }),
       setMenuState
-    );
+    )
 
   const addTriggerEvents = pipe(
     shopMenuTriggers,
     O.map(
       (ts) => () =>
         ts.forEach((trigger) => {
-          trigger.Transparency = 1;
+          trigger.Transparency = 1
           const wearables = pipe(
             trigger.StockFolder.Value?.GetChildren(),
             O.fromPredicate(t.array(wearableD))
-          );
+          )
 
           trigger.Touched.Connect(() => {
             if (O.isSome(wearables) && menuState.tag !== "armorShop") {
-              setMenuState(armorShop(wearables.value));
+              setMenuState(armorShop(wearables.value))
             }
-          });
+          })
         })
     ),
     O.getOrElse(() => noOpIO)
-  );
+  )
 
-  return { menuState, setMenuState, addTriggerEvents, toggleMenu };
-};
+  return { menuState, setMenuState, addTriggerEvents, toggleMenu }
+}
 
 export const MainMenu = new Hooks(Roact)(
   (_props, { useState, useEffect, useValue }) => {
-    const useIO = makeUseIO(useEffect, useValue);
+    const useIO = makeUseIO(useEffect, useValue)
     const { menuState, setMenuState, addTriggerEvents, toggleMenu } = useMenu({
       useState,
-    });
+    })
 
-    useIO(addTriggerEvents, tuple(), Eq.tuple());
+    useIO(addTriggerEvents, tuple(), Eq.tuple())
 
     return (
       <screengui>
@@ -229,6 +229,6 @@ export const MainMenu = new Hooks(Roact)(
           })
         )}
       </screengui>
-    );
+    )
   }
-);
+)

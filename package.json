@@ -28,7 +28,7 @@
     "@rbxts/net": "^2.1.3",
     "@rbxts/object-utils": "^1.0.4",
     "@rbxts/roact": "^1.4.0-ts.1",
-    "@rbxts/roact-hooks": "^0.1.1-ts.2",
+    "@rbxts/roact-hooks": "^0.1.1",
     "@rbxts/services": "^1.1.5",
     "@rbxts/t": "^2.1.4"
   }
